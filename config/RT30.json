@@ -1,0 +1,71 @@
+{
+    "data_source": {
+        "type": "sql"
+    },
+    "mapping_file": "../data/all_mappings.xlsx",
+    "mappings": [
+    {
+
+        "sheet_name": "Intercompany type- FORM90",
+        "keys": {
+            "main": "rv_rel_party_type_lastQ",
+            "mapping": "Intercompany"
+    },
+        "values": {
+            "Intercompany type- FORM90": "Intercompany_type_lastQ_inter_var"
+       }
+    },
+    {
+
+        "sheet_name": "Intercompany type- FORM90",
+        "keys": {
+            "main": "rv_rel_party_type_thisQ",
+            "mapping": "Intercompany"
+    },
+        "values": {
+            "Intercompany type- FORM90": "Intercompany_type_thisQ_inter_var"
+       }
+    },
+    {
+        "sheet_name": "Form90 COA",
+        "keys": {
+            "main": "rv_coa",
+            "mapping": "OUT_RV_COA"
+    },
+        "values": {
+            "Form90 COA": "Form90 COA_inter_var",
+            "Section": "Form90 section_inter_var"
+   }
+        },
+    {
+        "sheet_name": "Counterparty type- FORM90",
+        "keys": {
+            "main": "rv_cpty_type_lastQ",
+            "mapping": "OUT_RV_CPTY_TYPE"
+        },
+        "values": {
+            "Counterparty type- FORM90": "Counterpary type_lastQ_inter_var"
+        }
+    },
+    {
+        "sheet_name": "Counterparty type- FORM90",
+        "keys": {
+            "main": "rv_cpty_type_thisQ",
+            "mapping": "OUT_RV_CPTY_TYPE"
+        },
+        "values": {
+            "Counterparty type- FORM90": "Counterpary type_thisQ_inter_var"
+        }
+    },
+    {
+        "sheet_name": "REMAINING Maturity bucket",
+        "keys": {
+            "main": "rv_mat_remaining",
+            "mapping": "RV_MAT_REMAINING"
+        },
+        "values": {
+            "REMAINING Maturity bucket": "Residual maturity_inter_var"
+        }
+    }
+    ]
+}
