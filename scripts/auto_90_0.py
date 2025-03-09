@@ -77,10 +77,15 @@ def main():
 
     post_mapper = RT30PostMapper(df_rt30_mapped,current_rpt_period)
 
-    processed_data = post_mapper.process_all()
+    processed_data['deal_type_r4'] = processed_data['dealtype'].astype(str).str.slice(-4)
 
+    EXCLUDE_COLUMNS = ['maturity_date_status', 'value_date_status']
+    
     with pd.ExcelWriter(output_path / 'raw_data.xlsx') as writer:
-                processed_data.to_excel(writer, sheet_name='mapped_rt30', index=False)
+        # Drop excluded columns before writing
+        output_data = processed_data.drop(columns=EXCLUDE_COLUMNS, errors='ignore')
+        output_data.to_excel(writer, sheet_name='mapped_rt30', index=False)
+
 
 
 if __name__ == '__main__':
