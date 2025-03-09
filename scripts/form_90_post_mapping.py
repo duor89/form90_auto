@@ -10,7 +10,7 @@ logger = logging.getLogger(__name__)
 class MappingConfig:
     """Configuration constants for mapping operations"""
     NULL_VALUES = ['NULL', 'NaT', '']
-    MATURITY_DATES = ['12/31/9999', '9999-12-31']
+    MATURITY_DATES = ['12/31/9999', '9999-12-31', '2958465'] 
     SHORT_TERM_THRESHOLD = 1012000
     SPECIAL_COA = [6, 17]
     STATUS_TYPES = ['N', 'M', 'D']
@@ -44,7 +44,7 @@ class RT30PostMapper:
         if missing:
             raise ValueError(f"Missing required columns: {missing}")
 
-    def apply_status(self) -> 'RT30PostMapper':
+    def apply_status(self) -> 'RT30PostMapper': #checked
         try:
             maturity_dates = pd.to_datetime(self.data['maturity_date_status'], errors='coerce')
             
@@ -62,7 +62,7 @@ class RT30PostMapper:
             logger.error(f"Error in status calculation: {str(e)}")
             raise
 
-    def apply_form90_coa(self) -> 'RT30PostMapper':
+    def apply_form90_coa(self) -> 'RT30PostMapper':  #checked
         try:
             linkage_mask = self.data['ide_linkage_type'] == '10'
             
@@ -84,7 +84,7 @@ class RT30PostMapper:
             logger.error(f"Error in Form90 COA processing: {str(e)}")
             raise
 
-    def apply_domicile_rules(self) -> 'RT30PostMapper':
+    def apply_domicile_rules(self) -> 'RT30PostMapper': #checked
         try:
             for period in ['thisQ', 'lastQ']:
                 conditions = [
@@ -105,29 +105,54 @@ class RT30PostMapper:
             logger.error(f"Error in domicile rules: {str(e)}")
             raise
 
-    def apply_company_types(self) -> 'RT30PostMapper':
+    def apply_company_types(self) -> 'RT30PostMapper': #checked
         try:
             for period in ['thisQ', 'lastQ']:
                 conditions = [
-                    self.data[f'rv_resident_{period}'].isin(self.config.NULL_VALUES) | 
+                    self.data[f'rv_resident_{period}'].isin(self.config.NULL_VALUES) | ##    NULL_VALUES = ['NULL', 'NaT', '']
                     self.data[f'Domicile_{period}'].isin(self.config.NULL_VALUES),
                     (self.data[f'rv_resident_{period}'] == 'YES') | 
                     (self.data[f'Domicile_{period}'] == 'XX')
                 ]
                 choices = ['', 'NA']
-                
-                for type_prefix in ['Intercompany_type_', 'Counterparty_type_']:
-                    self.data[f'{type_prefix}{period}'] = np.select(
-                        conditions,
-                        choices,
-                        default=self.data[f'Intercompany_type_{period}_inter_var']
+
+                self.data[f'Intercompany_type_{period}'] = np.select(
+                    conditions,
+                    choices,
+                    default=self.data[f'Intercompany_type_{period}_inter_var']
                     )
             return self
         except Exception as e:
             logger.error(f"Error in company types: {str(e)}")
             raise
 
-    def apply_customer_diff(self) -> 'RT30PostMapper':
+    def apply_counterparty_types(self) -> 'RT30PostMapper':  #checked
+        try:
+            for period in ['thisQ', 'lastQ']:
+                conditions = [
+                    self.data[f'rv_resident_{period}'].isin(self.config.NULL_VALUES) | ##    NULL_VALUES = ['NULL', 'NaT', '']
+                    self.data[f'Domicile_{period}'].isin(self.config.NULL_VALUES),
+                    (self.data[f'rv_resident_{period}'] == 'YES') | 
+                    (self.data[f'Domicile_{period}'] == 'XX')
+                ]
+                choices = ['', 'NA']
+  
+                self.data[f'Counterparty_type_{period}'] = np.select(
+                    conditions,
+                    choices,
+                    default=self.data[f'Counterparty type_{period}_inter_var']
+                    )
+      
+
+            return self
+        except Exception as e:
+            logger.error(f"Error in Counterparty types: {str(e)}")
+            raise
+
+
+
+
+    def apply_customer_diff(self) -> 'RT30PostMapper': #checked 4 difference
         try:
             empty_mask = (
                 self.data[['Counterparty_type_lastQ', 'Counterparty_type_thisQ',
@@ -146,11 +171,11 @@ class RT30PostMapper:
             logger.error(f"Error in customer diff: {str(e)}")
             raise
 
-    def apply_maturities(self) -> 'RT30PostMapper':
+    def apply_maturities(self) -> 'RT30PostMapper':   #checked
         try:
             maturity_str = self.data['maturity_date'].astype(str)
             maturity_mask = (
-                maturity_str.isin(self.config.MATURITY_DATES + self.config.NULL_VALUES) |
+                maturity_str.isin(self.config.MATURITY_DATES) |
                 pd.isna(self.data['maturity_date'])
             )
             
@@ -158,15 +183,27 @@ class RT30PostMapper:
                 self.data['rv_mat_original'].replace('NULL', '0'),
                 errors='coerce'
             )
+
+            rv_mat_str = self.data['rv_mat_original'].astype(str)
+            rv_mask = (
+                rv_mat_str.isin(self.config.NULL_VALUES) | 
+                pd.isna(self.data['rv_mat_original'])
+            )
+
+            rv_mat_rm_str = self.data['rv_mat_remaining'].astype(str)
+            rv_mat_rm_str_mask = (
+                rv_mat_rm_str.isin(self.config.NULL_VALUES) | 
+                pd.isna(self.data['rv_mat_remaining'])
+            )
             
             self.data['Original_maturity'] = np.where(
-                maturity_mask | (rv_mat <= self.config.SHORT_TERM_THRESHOLD),
+                maturity_mask | rv_mask|(rv_mat <= self.config.SHORT_TERM_THRESHOLD),
                 'Short-term',
                 'Long-term'
             )
             
             self.data['Residual_maturity'] = np.where(
-                maturity_mask,
+                maturity_mask| rv_mat_rm_str_mask,
                 'Term<= 90 days',
                 self.data['Residual maturity_inter_var']
             )
@@ -175,7 +212,7 @@ class RT30PostMapper:
             logger.error(f"Error in maturities: {str(e)}")
             raise
 
-    def apply_nominal_conversion(self) -> 'RT30PostMapper':
+    def apply_nominal_conversion(self) -> 'RT30PostMapper': #checked
         try:
             self.data['nominal_converted'] = pd.to_numeric(
                 self.data['nominal'].replace(['NULL', np.nan], '0'),
@@ -219,8 +256,8 @@ class RT30PostMapper:
                 coa_dot_mask,
                 coa_special_mask & status_masks['N'] & bookv_positive_mask,
                 coa_special_mask & status_masks['N'] & ~bookv_positive_mask,
-                coa_special_mask & status_masks['M'],
-                coa_special_mask & status_masks['D'],
+                coa_special_mask & status_masks['M'] ,
+                coa_special_mask & status_masks['D'] ,
                 status_masks['N'],
                 status_masks['M'],
                 status_masks['D']
@@ -493,6 +530,7 @@ class RT30PostMapper:
         try:
             return (self
                     .apply_domicile_rules()
+                    .apply_counterparty_types()
                     .apply_company_types()
                     .apply_customer_diff()
                     .apply_maturities()
