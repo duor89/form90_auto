@@ -44,7 +44,7 @@
             "mapping": "OUT_RV_CPTY_TYPE"
         },
         "values": {
-            "Counterparty type- FORM90": "Counterpary type_lastQ_inter_var"
+            "Counterparty type- FORM90": "Counterparty type_lastQ_inter_var"
         }
     },
     {
@@ -54,7 +54,7 @@
             "mapping": "OUT_RV_CPTY_TYPE"
         },
         "values": {
-            "Counterparty type- FORM90": "Counterpary type_thisQ_inter_var"
+            "Counterparty type- FORM90": "Counterparty type_thisQ_inter_var"
         }
     },
     {
