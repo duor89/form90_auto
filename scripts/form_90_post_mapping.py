@@ -12,7 +12,7 @@ class MappingConfig:
     NULL_VALUES = ['NULL', 'NaT', '']
     MATURITY_DATES = ['12/31/9999', '9999-12-31', '2958465'] 
     SHORT_TERM_THRESHOLD = 1012000
-    SPECIAL_COA = [6, 17]
+    SPECIAL_COA = ['6', '17']
     STATUS_TYPES = ['N', 'M', 'D']
     FORM90_SECTION = 'Part D - Liabilities- Debt securities held by non-residents'
 
