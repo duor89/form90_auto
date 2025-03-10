@@ -80,10 +80,10 @@ def main():
     processed_data['deal_type_r4'] = processed_data['dealtype'].astype(str).str.slice(-4)
 
     EXCLUDE_COLUMNS = ['maturity_date_status', 'value_date_status']
+
+    output_data = processed_data.drop(columns=EXCLUDE_COLUMNS, errors='ignore')
     
     with pd.ExcelWriter(output_path / 'raw_data.xlsx') as writer:
-        # Drop excluded columns before writing
-        output_data = processed_data.drop(columns=EXCLUDE_COLUMNS, errors='ignore')
         output_data.to_excel(writer, sheet_name='mapped_rt30', index=False)
 
 
